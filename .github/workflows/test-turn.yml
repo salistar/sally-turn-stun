@@ -27,8 +27,8 @@ jobs:
 
       - name: Test TURN allocate
         env:
-          TURN_USER: ${{ '{{ secrets.TURN_USER }}' }}
-          TURN_PASS: ${{ '{{ secrets.TURN_PASS }}' }}
+          TURN_USER: ${{ secrets.TURN_USER }}
+          TURN_PASS: ${{ secrets.TURN_PASS }}
         run: |
           chmod +x scripts/test-turn.sh
           ./scripts/test-turn.sh turn.salistar.com "$TURN_USER" "$TURN_PASS"
@@ -37,5 +37,5 @@ jobs:
         if: failure()
         run: |
           curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"❌ TURN server check FAILED at ${{ '{{ github.run_id }}' }}"}' \
-            ${{ '{{ secrets.SLACK_WEBHOOK }}' }} || true
+            --data '{"text":"❌ TURN server check FAILED at ${{ github.run_id }}"}' \
+            ${{ secrets.SLACK_WEBHOOK }} || true
