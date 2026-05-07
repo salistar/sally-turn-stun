@@ -1,0 +1,41 @@
+name: Test TURN
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Vérifie le serveur de prod toutes les heures
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install coturn utilities
+        run: sudo apt-get update && sudo apt-get install -y coturn dnsutils
+
+      - name: Test STUN
+        run: |
+          turnutils_stunclient -p 3478 turn.salistar.com 2>&1 | tee stun.log
+          grep -q "Mapped address" stun.log
+
+      - name: Test TURN allocate
+        env:
+          TURN_USER: ${{ '{{ secrets.TURN_USER }}' }}
+          TURN_PASS: ${{ '{{ secrets.TURN_PASS }}' }}
+        run: |
+          chmod +x scripts/test-turn.sh
+          ./scripts/test-turn.sh turn.salistar.com "$TURN_USER" "$TURN_PASS"
+
+      - name: Notify Slack on failure
+        if: failure()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"❌ TURN server check FAILED at ${{ '{{ github.run_id }}' }}"}' \
+            ${{ '{{ secrets.SLACK_WEBHOOK }}' }} || true

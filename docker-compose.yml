@@ -1,0 +1,9 @@
+services:
+  sallycards-turn:
+    image: coturn/coturn:4.6
+    container_name: sallycards-turn
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./docker/turnserver.conf:/etc/coturn/turnserver.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
